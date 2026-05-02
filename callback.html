@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tikyetok — OAuth Callback</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(180deg, #08081a 0%, #161226 100%);
+    color: #f5f5f7;
+    min-height: 100vh; margin: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px; box-sizing: border-box;
+  }
+  .card {
+    background: #11132a; padding: 40px; border-radius: 16px;
+    max-width: 640px; width: 100%;
+    box-shadow: 0 20px 60px rgba(254, 44, 85, 0.15);
+    border: 1px solid rgba(37, 244, 238, 0.2);
+  }
+  h1 { margin: 0 0 8px; font-size: 24px; }
+  h1.ok { color: #25F4EE; }
+  h1.err { color: #FE2C55; }
+  .small { color: #999; font-size: 14px; margin-bottom: 24px; }
+  .field { margin: 16px 0; }
+  .label { font-size: 13px; color: #999; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .value {
+    background: #08081a; padding: 14px; border-radius: 8px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px; word-break: break-all;
+    border: 1px solid #2a2a40;
+  }
+  button {
+    background: #FE2C55; color: white; border: none;
+    padding: 12px 24px; border-radius: 8px; font-size: 15px; font-weight: 600;
+    cursor: pointer; margin-top: 8px;
+  }
+  button:hover { background: #d92148; }
+  button.copied { background: #25F4EE; color: #000; }
+  .note {
+    margin-top: 24px; padding: 16px;
+    background: rgba(37, 244, 238, 0.08);
+    border-left: 3px solid #25F4EE; border-radius: 4px;
+    font-size: 14px; color: #ccc;
+  }
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <h1 id="title">Loading...</h1>
+  <p class="small">@tikyetok — TikTok OAuth callback</p>
+  <div id="content"></div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
+  const state = params.get("state");
+  const error = params.get("error");
+  const errorDesc = params.get("error_description");
+
+  const title = document.getElementById("title");
+  const content = document.getElementById("content");
+
+  if (error) {
+    title.textContent = "Authorization failed";
+    title.className = "err";
+    content.innerHTML = `
+      <div class="field">
+        <div class="label">Error</div>
+        <div class="value">${error}</div>
+      </div>
+      ${errorDesc ? `
+      <div class="field">
+        <div class="label">Description</div>
+        <div class="value">${errorDesc}</div>
+      </div>` : ""}
+    `;
+  } else if (code) {
+    title.textContent = "✅ Authorization successful";
+    title.className = "ok";
+    content.innerHTML = `
+      <div class="field">
+        <div class="label">Authorization Code (paste this in your terminal)</div>
+        <div class="value" id="code">${code}</div>
+        <button onclick="copyCode()" id="copyBtn">Copy code</button>
+      </div>
+      <div class="field">
+        <div class="label">State</div>
+        <div class="value">${state || "(none)"}</div>
+      </div>
+      <div class="note">
+        Go back to your terminal and paste this code when prompted.
+        The code is valid for a short time only — don't wait too long.
+      </div>
+    `;
+  } else {
+    title.textContent = "No authorization data received";
+    title.className = "err";
+    content.innerHTML = `<p>Open this page only via the TikTok OAuth redirect.</p>`;
+  }
+
+  function copyCode() {
+    const c = document.getElementById("code").textContent;
+    navigator.clipboard.writeText(c).then(() => {
+      const btn = document.getElementById("copyBtn");
+      btn.textContent = "✓ Copied";
+      btn.className = "copied";
+      setTimeout(() => {
+        btn.textContent = "Copy code";
+        btn.className = "";
+      }, 2000);
+    });
+  }
+</script>
+
+</body>
+</html>
